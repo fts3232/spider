@@ -10,11 +10,11 @@
   "license": "ISC",
   "dependencies": {
     "request": "^2.83.0",
-    "superagent": "^3.8.1"
+    "superagent": "^3.8.1",
+    "cheerio": "^1.0.0-rc.2",
+    "express": "^4.16.2"
   },
   "devDependencies": {
-    "cheerio": "^1.0.0-rc.2",
-    "express": "^4.16.2",
     "nodemon": "^1.12.1"
   }
 }

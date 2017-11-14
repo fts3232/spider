@@ -50,3 +50,4 @@ mochawesome-report/
 Build/
 stats.json
 Api/public/upload
+pic/
