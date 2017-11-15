@@ -6,14 +6,70 @@ var path = require('path');
 var fs = require('fs');
 var app = express();
 
+function tt(){
+	var ip = random(1 , 254)  
+    + "." + random(1 , 254)  
+    + "." + random(1 , 254)  
+    + "." + random(1 , 254) 
+    var certFile = path.resolve(__dirname, 'ssl/123.cer');
+    var caFile = path.resolve(__dirname, 'ssl/2.pem');
+request.get('https://pics.dmm.co.jp/digital/video/oyc00145/oyc00145jp-1.jpg',{
+				timeout: 0,
+				cert: fs.readFileSync(certFile),
+				ca: fs.readFileSync(caFile),
+				headers: {
+				    'User-Agent': 'User-Agent:Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+				    "X-Forwarded-For":ip ,
+			        'Upgrade-Insecure-Requests':'1'
+
+			  	}
+		  	},(error, response, body)=>{
+				if (!error && response.statusCode == 200) {
+					// 输出网页内容
+					console.log(1)
+				}else{
+					console.log(error)
+					//reject(url+" failure reason");
+				}
+})
+return false;
+}
+tt()
+return false;
+
+function random(min,max){
+	var range = max - min;   
+	var rand = Math.random();   
+	return(min + Math.round(rand * range)); 
+}
 function visitor(url){
+	let ip = random(1 , 254)+ "." + random(1 , 254)+ "." + random(1 , 254)+ "." + random(1 , 254)  
 	return new Promise((resolve, reject) => {
-		request.get(url,(error, response, body)=>{
+		let patt1 = new RegExp("(http|https)://([^/]*)/?");
+		let host = patt1.exec(url);
+		console.log(host)
+		request.get(url,{
+			timeout: 0,
+			headers: {
+			    'User-Agent': 'User-Agent:Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+			    'X-Forwarded-For':ip ,
+			    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    			'Accept-Encoding':'*',
+		        'Accept-Language':'zh-CN,zh;q=0.8',
+		        'Cache-Control':'no-cache',
+		        'Connection':'keep-alive',
+		        'Cache-Control':'no-cache',
+		        'Pragma':'no-cache',
+		        'Upgrade-Insecure-Requests':'1',
+		        'Host':host[2]
+		  	}
+			},(error, response, body)=>{
 			if (!error && response.statusCode == 200) {
 				// 输出网页内容
 				resolve(body);
 			}else{
-				reject("failure reason");
+				console.log(error)
+				reject(url+" failure reason");
 			}
 		})
 	})
@@ -68,6 +124,7 @@ function javBus(){
 				fast = v;
 			}
 		})
+		console.log(fast.url)
 		return visitor(fast.url);
 	//访问页面
 	}).then((body)=>{
@@ -75,26 +132,102 @@ function javBus(){
 		let promises = [];
 		$('a.movie-box').each(function(i, elem) {
 			promises.push( visitor($(this).attr('href')) );
-			//request.get($(this).find('img').attr('src')).pipe(fs.createWriteStream('./pic/javbus/'+path.basename($(this).find('img').attr('src'))))
 		})
 		return Promise.all(promises)
 	//访问详情页
 	}).then((...args)=>{
 		let data = [];
 		args[0].map((body)=>{
-			let $ = cheerio.load(body)
-			let date = $('.col-md-3.info').find('p').eq(1).html()
-			date = date.replace(/<[^>]+>/g,"");
-			date.trim('');
-			data.push({
-				'img':$('.movie .bigImage').find('img').attr('src'),
-				'title':$('.movie .bigImage').find('img').attr('title'),
-				'date':date,
-				'identifier':$('.col-md-3.info').find('p').eq(0).find('span').eq(1).html(),
-			})
-			request.get($('.movie .bigImage').find('img').attr('src')).pipe(fs.createWriteStream('./pic/javbus/'+$('.col-md-3.info').find('p').eq(0).find('span').eq(1).html()+'.jpg'))
+			setTimeout(()=>{
+				let $ = cheerio.load(body)
+				let date = $('.col-md-3.info').find('p').eq(1).html()
+				date = date.replace(/<[^>]+>.*<[^>]+>/g,"");
+				date = date.trim('');
+				let bigImage = $('.movie .bigImage').find('img').attr('src');
+				let identifier = $('.col-md-3.info').find('p').eq(0).find('span').eq(1).html();
+				let title = $('.movie .bigImage').find('img').attr('title');
+				data.push({
+					'img':bigImage,
+					'title':title,
+					'date':date,
+					'identifier':identifier,
+				})
+				let dir = path.join('./pic/javbus/',identifier);
+				let promise = new Promise((resolve, reject) => {
+					fs.readdir(dir,(err,file)=>{
+						if(err){
+							resolve(0);
+						}else{
+							resolve(1);
+						}
+					})
+				}).then((data)=>{
+					return new Promise((resolve, reject) => {
+						if(data==1){
+							resolve(1);
+						}else{
+							fs.mkdir( dir ,function(err){
+								if(err){
+									reject('目录创建失败');
+								}else{
+									resolve(1);
+								}
+							})
+						}
+					})
+				}).then(()=>{
+					request.get(bigImage).pipe(fs.createWriteStream(path.join(dir,identifier+'.jpg')))
+					console.log(identifier)
+					$('.sample-box').each(function(i){
+						if($(this).attr('href')!='undefined'){
+							console.log($(this).attr('href'))
+							setTimeout(()=>{
+								//var certFile = path.resolve(__dirname, 'ssl/pics.dmm.co.jp.cer');
+								var ip = random(1 , 254)+ "." + random(1 , 254)+ "." + random(1 , 254)+ "." + random(1 , 254)  
+								request.get($(this).attr('href'),{
+										timeout: 0,
+										headers: {
+										    'User-Agent': 'User-Agent:Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+										    "X-Forwarded-For":ip ,
+									        'Upgrade-Insecure-Requests':'1'
+									  	}
+								  	}).on('response', function(response) {
+									    console.log(response.statusCode) // 200
+									    console.log(dir) // 'image/png'
+								  	}).pipe( fs.createWriteStream(path.join(dir,'sample-'+i+'.jpg')) )
+							},5000)
+							
+
+
+							//request.get($(this).attr('href'),{timeout: 300000,rejectUnauthorized: false}).pipe( fs.createWriteStream(path.join(dir,'sample-'+i+'.jpg')) )
+						}
+					})
+				}).catch((err)=>{
+					console.log(err)
+				})
+			},5000)
+			
+			/*fs.readdir(dir,(err,files)=>{
+				if(err){
+					fs.mkdir( dir ,function(err){
+						if(!err){
+
+						}
+					})
+				}
+
+			})*/
+			//request.get(bigImage).pipe(fs.createWriteStream(path.join(dir,identifier+'.jpg')))
+
+			/*$('.sample-box').each(function(i){
+				console.log($(this).attr('href'))
+				console.log(path.join(dir,'sample-'+i+'.jpg'))
+				request.get($(this).attr('href')).pipe( fs.createWriteStream(path.join(dir,'sample-'+i+'.jpg')) )
+			})*/
+
+			//request.get($('.movie .bigImage').find('img').attr('src')).pipe(fs.createWriteStream('./pic/javbus/'+$('.col-md-3.info').find('p').eq(0).find('span').eq(1).html()+'.jpg'))
 		})
-		console.log(data)
+		//console.log(data)
 	}).catch((err)=>{
 		console.log(err);
 	})	
