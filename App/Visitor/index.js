@@ -46,6 +46,8 @@ class Visitor{
 				headers: this.getHeaders(url,options)
 			}).on('error',(error)=>{
 				console.log(error)
+			}).on('close',()=>{
+				console.log('close')
 			})
     }
     ping(url){
