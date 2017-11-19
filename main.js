@@ -4,7 +4,12 @@ var cheerio = require('cheerio');
 var cp = require('child_process');
 var path = require('path');
 var fs = require('fs');
+var javbus = require('./javbus');
 var app = express();
+javbus = new javbus();
+javbus.visitPublishPage();
+
+return false;
 
 function tt(){
 	var ip = random(1 , 254)+ "." + random(1 , 254)+ "." + random(1 , 254)+ "." + random(1 , 254) 
@@ -32,14 +37,14 @@ function tt(){
 	return false;
 }
 
-request({url:'https://www.javbus.info/ajax/uncledatoolsbyajax.php?gid=31813623403&lang=zh&img=https://pics.javcdn.pw/cover/5kxx_b.jpg&uc=0&floor=450',headers:{
+/*request({url:'https://www.javbus.info/ajax/uncledatoolsbyajax.php?gid=31813623403&lang=zh&img=https://pics.javcdn.pw/cover/5kxx_b.jpg&uc=0&floor=450',headers:{
 'referer':'https://www.javbus.info/GVG-329',
   	}},function(error, response, body){
   		console.log(body)
   		let $ = cheerio.load(body)
   		console.log($('a').html())
   	})
-return false;
+return false;*/
 /*tt()
 return false;*/
 
@@ -167,6 +172,7 @@ function javBus(){
 				'identifier':identifier,
 			})
 
+
 			let patt1 = new RegExp("(http|https)://([^/]*)/?");
 			let host = patt1.exec($('[hreflang="en"]').attr('href'));
 			let patt2 = new RegExp("gid = (.*);");
@@ -178,13 +184,8 @@ function javBus(){
 			let img = patt3.exec(body);
 			img = img[1];
 			var u = host[1]+'://'+host[2]+"/ajax/uncledatoolsbyajax.php?gid=" + gid + "&img="+img+"&lang=" + lang + "&uc=" + uc + "&floor=" + Math.floor(Math.random() * 1e3 + 1);
-			visitor(u).then((body)=>{
-				let $ = cheerio.load(body)
-				console.log($('a').attr('href'))
-			})
 
-
-			let dir = path.join('./pic/javbus/',identifier);
+			let dir = path.join('./javbus/',identifier);
 			let promise = new Promise((resolve, reject) => {
 				fs.readdir(dir,(err,file)=>{
 					if(err){
@@ -208,6 +209,19 @@ function javBus(){
 					}
 				})
 			}).then(()=>{
+				
+				/*request({url:u,headers:{referer:host[1]+'://'+host[2]+"/"+identifier}}).then((body)=>{
+					let $ = cheerio.load(body)
+					let length = $('a').length;
+					if(length>0){
+						$('a').each(function(i){
+							fs.writeFile(path.join(dir,'magnet.txt'),$(this).attr('href'))
+						})
+					}
+					console.log($('a').attr('href'))
+				})*/
+
+
 				request.get(bigImage).pipe(fs.createWriteStream(path.join(dir,identifier+'.jpg')))
 				console.log(identifier)
 				//
